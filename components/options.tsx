@@ -1,5 +1,7 @@
 
 import { colors } from "@/constants/theme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
@@ -10,8 +12,10 @@ interface OptionsProps {
 
 export const Options: React.FC<OptionsProps> = ({ isOpen, onClose }) => {
 
-
-  const logOut = () => {
+  const router = useRouter()
+  const logOut = async () => {
+    await AsyncStorage.removeItem("token")
+    router.replace('/(auth)/login')
     onClose();
   };
 

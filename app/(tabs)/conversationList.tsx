@@ -11,6 +11,7 @@ import { useUserInfoStore } from "@/stores/userInfoStore";
 import { Options } from "@/components/options";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import MyButton from "@/components/button";
 
 const ConversationList = () => {
   const [users, setUsers] = useState<UserInfoApi[] | null>(null);
@@ -81,6 +82,11 @@ const ConversationList = () => {
     }
   };
 
+  const logOut = async () => {
+    await AsyncStorage.removeItem("token")
+    router.replace('/(auth)/login')
+  };
+
   useEffect(() => {
     fetchConversationList();
   }, []);
@@ -89,9 +95,10 @@ const ConversationList = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.username}>{userInfo?.name}</Text>
+        <Text style={styles.username}>Welcome! {userInfo?.name}</Text>
         <TouchableOpacity onPress={togglePopup}>
           {/* <Image source={require("@/assets/images/options.png")} style={styles.optionsIcon} /> */}
+          <MyButton title="Signout" onPress={logOut} />
         </TouchableOpacity>
         <Options isOpen={isPopupOpen} onClose={closePopup} />
       </View>

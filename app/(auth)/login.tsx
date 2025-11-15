@@ -7,9 +7,11 @@ import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
 import axios from "@/utils/axios"; // ensure axios works with React Native
 import { type UserInfoApi } from "@/types/types";
 import AsyncStorage from '@react-native-async-storage/async-storage'; // optional for token storage
+import { useUserInfoStore } from "@/stores/userInfoStore";
 
 const Login = () => {
   const router = useRouter();
+  const setUserInfo = useUserInfoStore((state) => state.setUserInfo)
 
   const [formData, setFormData] = useState({
     phone: "",
@@ -26,6 +28,13 @@ const Login = () => {
         phone: formData.phone,
         password: formData.password,
       });
+
+      setUserInfo({
+        name: response.data.user.name,
+        id: response.data.user.id,
+        phone: response.data.user.phone
+      })
+
 
       // Store token or user info
       await AsyncStorage.setItem("token", response.data.token);
