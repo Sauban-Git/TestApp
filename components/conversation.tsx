@@ -8,22 +8,22 @@ type ConversationProps = {
   lastMessage: string;
   time?: string;
   imageUrl?: string;
+  onPress?: () => void
 };
 
 const Conversation = ({
   title,
   lastMessage,
   time,
-  imageUrl = "https://via.placeholder.com/50", // default image URL
+  onPress,
+  imageUrl = "https://via.placeholder.com/50",
 }: ConversationProps) => {
-  const router = useRouter()
 
   return (
     <TouchableOpacity
       style={styles.container}
-      onPress={() => router.replace('/(tabs)/messageList')}
+      onPress={onPress}
     >
-      <Image source={{ uri: imageUrl }} style={styles.image} />
 
       <View style={styles.textContainer}>
         <View style={styles.header}>

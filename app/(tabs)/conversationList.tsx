@@ -37,18 +37,22 @@ const ConversationList = () => {
   const fetchConversationList = async () => {
     const token = await AsyncStorage.getItem("token")
     if (!token) return router.replace("/(auth)/login")
-    const response = await axios.get<{ conversationList: ConversationsListApi }>("/conversation/", {
+    const response = await axios.get<{ conversation: ConversationsListApi }>("/conversation/", {
       headers: {
         Authorization: token
       }
     });
-    setConversationsList(response.data.conversationList);
+    setConversationsList(response.data.conversation);
+    console.log("res: ", response.data.conversation)
+    console.log("conversationList:  ", conversationList)
 
     const res = await axios.get<{ users: UserInfoApi[] }>("/user/");
     setUsers(res.data.users);
   };
 
   const openMessage = (id: string, name: string | undefined) => {
+    console.log("Message List opening")
+    console.log("conversationId sent from conversationList: ", id)
     setSelectConversation({
       id,
       name: name ?? null,
@@ -57,6 +61,7 @@ const ConversationList = () => {
   };
 
   const newConversation = async (id: string) => {
+    console.log("Creating new Conv:  ")
     const token = await AsyncStorage.getItem("token")
     if (!token) return router.replace('/(auth)/login')
     try {
@@ -71,6 +76,7 @@ const ConversationList = () => {
       });
 
       if (res.data.conversation) {
+        console.log("New conversation with id: ", res.data.conversation.id)
         setSelectConversation({
           name: res.data.conversation.name ?? null,
           id: res.data.conversation.id,
@@ -121,12 +127,15 @@ const ConversationList = () => {
             <Text style={styles.sectionHeader}>Chats</Text>
             {filteredConversations.length > 0 &&
               filteredConversations.map((conv, index) => (
-                <TouchableOpacity key={index} onPress={() => openMessage(conv.id, conv.name)}>
-                  <Conversation
-                    title={conv.name || ""}
-                    lastMessage={conv.messages[0]?.content ?? "Click to start conversation"}
-                  />
-                </TouchableOpacity>
+                <Conversation
+                  onPress={() => {
+                    console.log("chat pressed")
+                    openMessage(conv.id, conv.name)
+                  }}
+                  key={index}
+                  title={conv.name || ""}
+                  lastMessage={conv.messages[0]?.content ?? "Click to start conversation"}
+                />
               ))}
           </View>
         )}
@@ -136,9 +145,7 @@ const ConversationList = () => {
             <Text style={styles.sectionHeader}>Contacts</Text>
             {users.length > 0 ? (
               users.map((user, index) => (
-                <TouchableOpacity key={index} onPress={() => newConversation(user.id)}>
-                  <Conversation title={user.name || ""} lastMessage="Click to start conversation" />
-                </TouchableOpacity>
+                <Conversation key={index} title={user.name || ""} lastMessage="Click to start conversation" onPress={() => newConversation(user.id)} />
               ))
             ) : (
               <Text style={styles.noResults}>No results found</Text>

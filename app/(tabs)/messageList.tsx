@@ -18,7 +18,7 @@ import { useSelectConversationStore } from "@/stores/selectConversationStore"
 import { useRouter } from "expo-router"
 import Message from "@/components/message"
 import { formatToLocalTime } from "@/utils/formatToLocalTime"
-import { type MessageApi } from "@/types/types"
+import { MessageListApi, type MessageApi } from "@/types/types"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
 const MessagesList = () => {
@@ -39,8 +39,9 @@ const MessagesList = () => {
   const fetchMessages = async () => {
     const token = await AsyncStorage.getItem("token")
     if (!token) return router.replace('/(auth)/login')
+    console.log("COnversationId: ", conversationId)
     try {
-      const res = await axios.get(`/message/${conversationId}`, {
+      const res = await axios.get<{ messages: MessageListApi }>(`/message/${conversationId}`, {
         headers: {
           Authorization: token
         }
@@ -87,6 +88,7 @@ const MessagesList = () => {
     }
   }
 
+
   useEffect(() => {
     fetchMessages()
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200)
@@ -108,7 +110,7 @@ const MessagesList = () => {
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Sauban</Text>
+          <Text style={styles.headerTitle}>{conversationId}</Text>
         </View>
 
         {/* <Image source={require("../../assets/options.png")} style={styles.icon} /> */}
