@@ -11,8 +11,8 @@ import { colors } from "@/constants/theme";
 import { useUserInfoStore } from "@/stores/userInfoStore";
 import { router, Stack } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import MyButton from "@/components/button";
 import { Options } from "@/components/options";
+import { useSocket } from "@/hooks/useSocket";
 
 const ConversationList = () => {
   const [users, setUsers] = useState<UserInfoApi[] | null>(null);
@@ -60,11 +60,8 @@ const ConversationList = () => {
     }
   };
 
-  const openMessage = (id: string, name: string | undefined) => {
-    setSelectConversation({
-      id,
-      name: name ?? null,
-    });
+  const openMessage = (conversation: ConversationApi) => {
+    setSelectConversation(conversation);
     router.replace('/(tabs)/messageList')
   };
 
@@ -85,10 +82,7 @@ const ConversationList = () => {
 
       if (res.data.conversation) {
         console.log("New conversation with id: ", res.data.conversation.id)
-        setSelectConversation({
-          name: name ?? "Unknown",
-          id: res.data.conversation.id,
-        });
+        setSelectConversation(res.data.conversation)
         router.replace('/(tabs)/messageList')
       }
     } catch (error) {
@@ -100,17 +94,14 @@ const ConversationList = () => {
   const toggleOptions = () => setIsOptionsOpen(prev => !prev);
   const closeOptions = () => setIsOptionsOpen(false);
 
-
-
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      // If we can navigate back, do it
+
       if (router.canGoBack()) {
         router.back();
         return true; // prevent default
       }
 
-      // Otherwise exit the app
       BackHandler.exitApp();
       return true;
     });
@@ -169,18 +160,19 @@ const ConversationList = () => {
           <View>
             <Text style={styles.sectionHeader}>Chats</Text>
             {filteredConversations.length > 0 &&
-              filteredConversations.map((conv, index) => (
+              filteredConversations.map((conv, index) => {
+                const otherParticipant = conv.participants.find(p => p.id !== userInfo?.id);
 
-                <Conversation
+                return <Conversation
+                  participantId={otherParticipant?.id}
                   onPress={() => {
-                    console.log("chat pressed")
-                    openMessage(conv.id, conv.name)
+                    openMessage(conv)
                   }}
                   key={index}
                   title={conv.name || ""}
                   lastMessage={conv.messages[0]?.content ?? "Click to start conversation"}
                 />
-              ))}
+              })}
           </View>
         )}
 

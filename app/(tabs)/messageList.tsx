@@ -24,6 +24,8 @@ import { formatToLocalTime } from "@/utils/formatToLocalTime"
 import { MessageListApi, type MessageApi } from "@/types/types"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { colors } from "@/constants/theme"
+import { useOnlineUserList } from "@/stores/onlineUsersStore"
+import { useSocket } from "@/hooks/useSocket"
 
 const MessagesList = () => {
 
@@ -35,17 +37,19 @@ const MessagesList = () => {
   const messageList = useMessageListStore((state) => state.messagesList)
   const setMessageList = useMessageListStore((state) => state.setMessagesList)
   const addMessage = useMessageListStore((state) => state.addMessage)
-  const conversationId = useSelectConversationStore((state) => state.id)
-  const conversationTitle = useSelectConversationStore((state) => state.name)
   const userInfo = useUserInfoStore((state) => state.user)
+  const conversation = useSelectConversationStore((state) => state.conversation)
 
+  const participant = conversation?.participants.find(p => p.id !== userInfo?.id);
+  const onlineUserList = useOnlineUserList((state) => state.onlineUserList)
+  const [isOnline, setIsOnline] = useState(false)
 
   const fetchMessages = async () => {
     const token = await AsyncStorage.getItem("token")
     if (!token) return router.replace('/(auth)/login')
-    console.log("COnversationId: ", conversationId)
+    if (!conversation?.id) return router.replace('/(tabs)/conversationList')
     try {
-      const res = await axios.get<{ messages: MessageListApi }>(`/message/${conversationId}`, {
+      const res = await axios.get<{ messages: MessageListApi }>(`/message/${conversation?.id}`, {
         headers: {
           Authorization: token
         }
@@ -56,41 +60,54 @@ const MessagesList = () => {
     }
   }
 
-  const sendMessage = async () => {
+  const { sendMessage } = useSocket()
 
-    if (!content) return
-    const token = await AsyncStorage.getItem("token")
-    if (!token) return router.replace('/(auth)/login')
-
-    try {
-      const res = await axios.post<{ message: MessageApi }>("/message/", {
-        conversationId,
-        senderId: userInfo?.id,
-        content,
-      }, {
-        headers: {
-          Authorization: token
-        }
-      }
-      )
-
-      const message = res.data.message
-      if (!message) return
-
-      addMessage({
-        senderId: message.senderId,
-        content: message.content,
-        createdAt: message.createdAt,
-        conversationId: message.conversationId
-      })
-
-      scrollRef.current?.scrollToEnd({ animated: true })
-      setContent("")
-
-    } catch (error) {
-      console.log("Error sending message:", error)
-    }
+  const newMessage = () => {
+    sendMessage(conversation!.id, content)
   }
+
+  // const sendMessage = async () => {
+  //
+  //   if (!content) return
+  //   const token = await AsyncStorage.getItem("token")
+  //   if (!token) return router.replace('/(auth)/login')
+  //
+  //   try {
+  //     const res = await axios.post<{ message: MessageApi }>("/message/", {
+  //       conversationId: conversation?.id,
+  //       senderId: userInfo?.id,
+  //       content,
+  //     }, {
+  //       headers: {
+  //         Authorization: token
+  //       }
+  //     }
+  //     )
+  //
+  //     const message = res.data.message
+  //     if (!message) return
+  //
+  //     addMessage({
+  //       senderId: message.senderId,
+  //       content: message.content,
+  //       createdAt: message.createdAt,
+  //       conversationId: message.conversationId
+  //     })
+  //
+  //     scrollRef.current?.scrollToEnd({ animated: true })
+  //     setContent("")
+  //
+  //   } catch (error) {
+  //     console.log("Error sending message:", error)
+  //   }
+  // }
+
+  useEffect(() => {
+    if (participant?.id && onlineUserList) {
+      setIsOnline(onlineUserList.includes(participant.id));
+    }
+  }, [participant?.id, onlineUserList]);
+
 
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
@@ -109,6 +126,7 @@ const MessagesList = () => {
   }, []);
 
 
+
   useEffect(() => {
     fetchMessages()
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200)
@@ -120,10 +138,22 @@ const MessagesList = () => {
     behavior={Platform.OS === "ios" ? "padding" : "height"}
     keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}>
     <Stack.Screen options={{
-      title: conversationTitle || "Unknown", headerStyle: {
+      title: conversation?.name || "Unknown", headerStyle: {
         backgroundColor: colors.neutral900,
       },
       headerTintColor: '#fff',
+      headerTitle: () => (
+        <View>
+          <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 18 }}>
+            {conversation?.name || "Unknown"}
+          </Text>
+          {typeof isOnline !== "undefined" && (
+            <Text style={{ color: isOnline ? "#22c55e" : "#aaa", fontSize: 12 }}>
+              {isOnline ? "Online" : "Offline"}
+            </Text>
+          )}
+        </View>
+      ),
       headerTitleStyle: {
         fontWeight: 'bold',
       },
@@ -171,10 +201,8 @@ const MessagesList = () => {
           onChangeText={setContent}
           placeholder="Type here..."
           style={styles.textInput}
-          returnKeyType="send"
-          onSubmitEditing={sendMessage}
         />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+        <TouchableOpacity style={styles.sendButton} onPress={newMessage}>
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>

@@ -1,14 +1,14 @@
+import { getSocket } from "@/singleton/socket"
 import { useMessageListStore } from "@/stores/messageListStore"
 import { useOnlineUserList } from "@/stores/onlineUsersStore"
+import { useSelectConversationStore } from "@/stores/selectConversationStore"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useCallback, useEffect, useRef, useState } from "react"
-import io, { Socket } from "socket.io-client"
+import { type Socket } from "socket.io-client"
 
-interface UseSocketOptions {
-  token: string
-}
 
-export const useSocket = ({ token }: UseSocketOptions) => {
-
+export const useSocket = () => {
+  const conversation = useSelectConversationStore((state) => state.conversation)
   const socketRef = useRef<Socket | null>(null)
   const [connected, setConnected] = useState(false);
   const [typingUser, setTypingUser] = useState<string | null>(null);
@@ -16,44 +16,70 @@ export const useSocket = ({ token }: UseSocketOptions) => {
   const addMessage = useMessageListStore((state) => state.addMessage)
 
   useEffect(() => {
-    const socket = io('http://192.168.31.54:3000', {
-      transports: ["websocket"],
-      extraHeaders: {
-        authorization: token
-      }
-    })
 
-    socketRef.current = socket
+    const initSocket = async () => {
+      const token = await AsyncStorage.getItem("token")
+      if (!token) return console.log("wrong token")
+      console.log("Socket connecting.....")
+      const socket = getSocket(token)
 
-    socket.on("connect", () => {
-      setConnected(true)
-    })
+      socketRef.current = socket
 
-    socket.on("disconnect", () => {
-      setConnected(false)
-    })
+      socket.on("connect", () => {
+        setConnected(true)
+        console.log("Socket connected")
+      })
 
-    socket.on("online", (data) => {
-      setOnlineUserList(data.onlineUser || [])
-    })
+      socket.on("disconnect", () => {
+        setConnected(false)
+        console.log("Socket disconnected")
+      })
 
-    socket.on("message:new", (data) => {
-      addMessage(data.message)
-    })
+      socket.on("connect_error", (err) => {
+        console.log("Socket connect error:", err.message);
+      });
 
-    socket.on("typing:status", (data) => {
-      setTypingUser(data.typing === "start" ? data.userId : null)
-    })
+      socket.on("online", (data) => {
+        setOnlineUserList(data.onlineUser || [])
+        console.log("set online true..")
+      })
 
-    return () => {
-      socket.disconnect()
+      socket.on("message:new", (data) => {
+        addMessage(data.message)
+
+        console.log("new message goingg...")
+      })
+
+      socket.on("typing:status", (data) => {
+        setTypingUser(data.typing === "start" ? data.userId : null)
+      })
+
     }
 
-  }, [token])
-  // Join conversation
-  const joinConversation = useCallback((conversationId: string) => {
-    socketRef.current?.emit("conversation:join", { conversationId });
-  }, []);
+    initSocket()
+
+    return () => {
+      const socket = socketRef.current
+      if (socket) {
+
+        socket.off("connect");
+        socket.off("disconnect");
+        socket.off("connect_error");
+        socket.off("online");
+        socket.off("message:new");
+        socket.off("typing:status");
+      }
+    };
+
+  }, [])
+
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket || !conversation?.id) return;
+
+    console.log("Joining conversation:", conversation.id);
+    socket.emit("conversation:join", { conversationId: conversation.id });
+  }, [conversation]);
 
   const sendMessage = useCallback(
     (conversationId: string, message: string) => {
@@ -72,7 +98,6 @@ export const useSocket = ({ token }: UseSocketOptions) => {
   return {
     connected,
     typingUser,
-    joinConversation,
     sendMessage,
     setTyping,
   };
