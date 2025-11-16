@@ -1,6 +1,5 @@
 import { useMessageListStore } from "@/stores/messageListStore"
 import { useOnlineUserList } from "@/stores/onlineUsersStore"
-import { useRouter } from "expo-router"
 import { useCallback, useEffect, useRef, useState } from "react"
 import io, { Socket } from "socket.io-client"
 
@@ -10,7 +9,6 @@ interface UseSocketOptions {
 
 export const useSocket = ({ token }: UseSocketOptions) => {
 
-  const router = useRouter()
   const socketRef = useRef<Socket | null>(null)
   const [connected, setConnected] = useState(false);
   const [typingUser, setTypingUser] = useState<string | null>(null);
