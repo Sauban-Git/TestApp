@@ -15,8 +15,8 @@ export const Options: React.FC<OptionsProps> = ({ isOpen, onClose }) => {
   const router = useRouter()
   const logOut = async () => {
     await AsyncStorage.removeItem("token")
+    await AsyncStorage.removeItem("userInfo")
     router.replace('/(auth)/login')
-    onClose();
   };
 
   if (!isOpen) return null;

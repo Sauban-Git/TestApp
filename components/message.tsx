@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   senderMessage: {
-    backgroundColor: colors.neutral900 || "#ccc",
+    backgroundColor: colors.myBubble,
     borderRadius: 20,
     padding: 10,
     maxWidth: "75%",

@@ -1,6 +1,7 @@
 
+import { MaterialIcons } from "@expo/vector-icons"
 import { useEffect, useRef, useState } from "react";
-import { View, Text, TextInput, ScrollView, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { View, Text, TextInput, ScrollView, StyleSheet, Alert, BackHandler, TouchableOpacity } from "react-native";
 import Conversation from "@/components/conversation";
 import axios from "@/utils/axios";
 import type { ConversationApi, ConversationsListApi, UserInfoApi } from "@/types/types";
@@ -8,14 +9,13 @@ import { useConversationsListStore } from "@/stores/conversationListStore";
 import { useSelectConversationStore } from "@/stores/selectConversationStore";
 import { colors } from "@/constants/theme";
 import { useUserInfoStore } from "@/stores/userInfoStore";
-import { Options } from "@/components/options";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MyButton from "@/components/button";
+import { Options } from "@/components/options";
 
 const ConversationList = () => {
   const [users, setUsers] = useState<UserInfoApi[] | null>(null);
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   const setConversationsList = useConversationsListStore((state) => state.setConversationsList);
@@ -23,8 +23,6 @@ const ConversationList = () => {
   const setSelectConversation = useSelectConversationStore((state) => state.setConversationStore);
   const userInfo = useUserInfoStore((state) => state.user);
 
-  const togglePopup = () => setIsPopupOpen((prev) => !prev);
-  const closePopup = () => setIsPopupOpen(false);
 
   const searchRef = useRef<TextInput>(null);
 
@@ -37,22 +35,32 @@ const ConversationList = () => {
   const fetchConversationList = async () => {
     const token = await AsyncStorage.getItem("token")
     if (!token) return router.replace("/(auth)/login")
-    const response = await axios.get<{ conversation: ConversationsListApi }>("/conversation/", {
-      headers: {
-        Authorization: token
-      }
-    });
-    setConversationsList(response.data.conversation);
-    console.log("res: ", response.data.conversation)
-    console.log("conversationList:  ", conversationList)
+    try {
 
-    const res = await axios.get<{ users: UserInfoApi[] }>("/user/");
-    setUsers(res.data.users);
+      const response = await axios.get<{ conversation: ConversationsListApi }>("/conversation/", {
+        headers: {
+          Authorization: token
+        }
+      });
+      const updatedConversations = response.data.conversation.map((conv) => {
+        if (!conv.name) {
+          conv.name = conv.participants?.find(p => p.id !== userInfo?.id)?.name ?? "Unknown";
+        }
+        return conv;
+      });
+
+      setConversationsList(updatedConversations);
+
+      const res = await axios.get<{ users: UserInfoApi[] }>("/user/");
+      setUsers(res.data.users);
+    }
+    catch {
+      Alert.alert("Network Error!")
+      return
+    }
   };
 
   const openMessage = (id: string, name: string | undefined) => {
-    console.log("Message List opening")
-    console.log("conversationId sent from conversationList: ", id)
     setSelectConversation({
       id,
       name: name ?? null,
@@ -60,7 +68,7 @@ const ConversationList = () => {
     router.replace('/(tabs)/messageList')
   };
 
-  const newConversation = async (id: string) => {
+  const newConversation = async (id: string, name: string) => {
     console.log("Creating new Conv:  ")
     const token = await AsyncStorage.getItem("token")
     if (!token) return router.replace('/(auth)/login')
@@ -78,7 +86,7 @@ const ConversationList = () => {
       if (res.data.conversation) {
         console.log("New conversation with id: ", res.data.conversation.id)
         setSelectConversation({
-          name: res.data.conversation.name ?? null,
+          name: name ?? "Unknown",
           id: res.data.conversation.id,
         });
         router.replace('/(tabs)/messageList')
@@ -88,26 +96,61 @@ const ConversationList = () => {
     }
   };
 
-  const logOut = async () => {
-    await AsyncStorage.removeItem("token")
-    router.replace('/(auth)/login')
-  };
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const toggleOptions = () => setIsOptionsOpen(prev => !prev);
+  const closeOptions = () => setIsOptionsOpen(false);
+
+
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      // If we can navigate back, do it
+      if (router.canGoBack()) {
+        router.back();
+        return true; // prevent default
+      }
+
+      // Otherwise exit the app
+      BackHandler.exitApp();
+      return true;
+    });
+
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     fetchConversationList();
   }, []);
 
-  return (
+  return (<>
+
+    <Stack.Screen options={{
+      title: userInfo?.name, headerRight: () => (
+        <TouchableOpacity onPress={toggleOptions} style={{ marginRight: 16 }}>
+          <MaterialIcons name="more-vert" size={28} color="#000" />
+        </TouchableOpacity>
+      ),
+      headerStyle: {
+        backgroundColor: colors.neutral900, // same as StatusBar
+      },
+      headerTintColor: '#fff', // color of title & icons
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    }} />
+
+    <Options isOpen={isOptionsOpen} onClose={closeOptions} />
+
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.username}>Welcome! {userInfo?.name}</Text>
-        <TouchableOpacity onPress={togglePopup}>
-          {/* <Image source={require("@/assets/images/options.png")} style={styles.optionsIcon} /> */}
-          <MyButton title="Signout" onPress={logOut} />
-        </TouchableOpacity>
-        <Options isOpen={isPopupOpen} onClose={closePopup} />
-      </View>
+      {/* <View style={styles.header}> */}
+      {/*   <Text style={styles.username}>{userInfo?.name}</Text> */}
+      {/*   <TouchableOpacity onPress={togglePopup}> */}
+      {/* <Image source={require("@/assets/images/options.png")} style={styles.optionsIcon} /> */}
+      {/*     <MyButton title="Signout" onPress={logOut} /> */}
+      {/*   </TouchableOpacity> */}
+      {/*   <Options isOpen={isPopupOpen} onClose={closePopup} /> */}
+      {/* </View> */}
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
@@ -127,6 +170,7 @@ const ConversationList = () => {
             <Text style={styles.sectionHeader}>Chats</Text>
             {filteredConversations.length > 0 &&
               filteredConversations.map((conv, index) => (
+
                 <Conversation
                   onPress={() => {
                     console.log("chat pressed")
@@ -145,7 +189,7 @@ const ConversationList = () => {
             <Text style={styles.sectionHeader}>Contacts</Text>
             {users.length > 0 ? (
               users.map((user, index) => (
-                <Conversation key={index} title={user.name || ""} lastMessage="Click to start conversation" onPress={() => newConversation(user.id)} />
+                <Conversation key={index} title={user.name || ""} lastMessage="Click to start conversation" onPress={() => newConversation(user.id, user.name)} />
               ))
             ) : (
               <Text style={styles.noResults}>No results found</Text>
@@ -153,7 +197,7 @@ const ConversationList = () => {
           </View>
         )}
       </ScrollView>
-    </View>
+    </View></>
   );
 };
 
@@ -185,9 +229,10 @@ const styles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: 16,
     paddingVertical: 8,
+    color: "white",
   },
   searchInput: {
-    backgroundColor: colors.neutral800,
+    backgroundColor: colors.neutral400,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 8,
