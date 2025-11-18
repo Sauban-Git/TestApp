@@ -1,5 +1,6 @@
 import MyButton from "@/components/button"
 import { colors } from "@/constants/theme"
+import { useUserInfoStore } from "@/stores/userInfoStore"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useRouter } from "expo-router"
 import { useEffect } from "react"
@@ -7,10 +8,14 @@ import { View, Text, StyleSheet } from "react-native"
 
 const Welcome = () => {
   const router = useRouter()
-
+  const loadUserInfo = useUserInfoStore((state) => state.loadUserInfo)
   const checkUser = async () => {
     const token = await AsyncStorage.getItem("token")
-    if (token) return router.replace('/(tabs)/conversationList')
+    if (token) {
+      loadUserInfo()
+      return router.replace('/(tabs)/conversationList')
+    }
+
   }
 
   useEffect(() => {
