@@ -1,4 +1,5 @@
 import { getSocket } from "@/singleton/socket"
+import { useConversationsListStore } from "@/stores/conversationListStore"
 import { useMessageListStore } from "@/stores/messageListStore"
 import { useOnlineUserList } from "@/stores/onlineUsersStore"
 import { useSelectConversationStore } from "@/stores/selectConversationStore"
@@ -14,7 +15,7 @@ export const useSocket = () => {
   const [typingUser, setTypingUser] = useState<string | null>(null);
   const setOnlineUserList = useOnlineUserList((state) => state.setOnlineUserList)
   const addMessage = useMessageListStore((state) => state.addMessage)
-
+  const updateLastMessage = useConversationsListStore((state) => state.updateLastMessage)
   useEffect(() => {
 
     const initSocket = async () => {
@@ -46,7 +47,7 @@ export const useSocket = () => {
 
       socket.on("message:new", (data) => {
         addMessage(data.message)
-
+        updateLastMessage(data.message, data.conversationId)
         console.log("new message goingg...")
       })
 
@@ -72,14 +73,6 @@ export const useSocket = () => {
     };
 
   }, [])
-
-  useEffect(() => {
-    const socket = socketRef.current;
-    if (!socket || !conversation?.id) return;
-
-    console.log("Joining conversation:", conversation.id);
-    socket.emit("conversation:join", { conversationId: conversation.id });
-  }, [conversation]);
 
   const sendMessage = useCallback(
     (conversationId: string, message: string) => {
