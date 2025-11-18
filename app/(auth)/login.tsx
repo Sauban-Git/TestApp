@@ -8,8 +8,10 @@ import axios from "@/utils/axios"; // ensure axios works with React Native
 import { type UserInfoApi } from "@/types/types";
 import AsyncStorage from '@react-native-async-storage/async-storage'; // optional for token storage
 import { useUserInfoStore } from "@/stores/userInfoStore";
+import { useColors } from "@/hooks/useColors";
 
 const Login = () => {
+  const c = useColors()
   const router = useRouter();
   const setUserInfo = useUserInfoStore((state) => state.setUserInfo)
 
@@ -48,22 +50,22 @@ const Login = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign In</Text>
+    <View style={[styles.container, { backgroundColor: c.card }]}>
+      <Text style={[styles.title, { color: c.text }]}>Sign In</Text>
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: c.background }]}
         placeholder="Phone"
-        placeholderTextColor="#aaa"
+        placeholderTextColor={c.textSecondary}
         keyboardType="phone-pad"
         value={formData.phone}
         onChangeText={(text) => handleChange("phone", text)}
       />
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: c.background }]}
         placeholder="Password"
-        placeholderTextColor="#aaa"
+        placeholderTextColor={c.textSecondary}
         secureTextEntry
         value={formData.password}
         onChangeText={(text) => handleChange("password", text)}
@@ -72,12 +74,12 @@ const Login = () => {
       <MyButton title="Sign In" onPress={handleSubmit} />
 
       <View style={styles.signupTextContainer}>
-        <Text style={styles.signupText}>New here?</Text>
+        <Text style={{ color: c.text }}>New here? </Text>
         <Text
-          style={styles.signupLink}
+          style={[styles.signupLink, { color: c.link }]}
           onPress={() => router.replace("/(auth)/signup")}
         >
-          {" "}Signup
+          Signup
         </Text>
       </View>
     </View>
@@ -91,17 +93,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 20,
-    backgroundColor: colors.neutral900,
   },
   title: {
     fontSize: 28,
-    color: colors.primary,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
   },
   input: {
-    backgroundColor: "#fff",
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
@@ -115,11 +114,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 20,
   },
-  signupText: {
-    color: "#fff",
-  },
   signupLink: {
-    color: colors.primary,
     textDecorationLine: "underline",
   },
 });

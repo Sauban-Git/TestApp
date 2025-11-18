@@ -1,20 +1,23 @@
-import { colors } from "@/constants/theme"
+import { useColors } from "@/hooks/useColors"
 import { useRouter } from "expo-router"
 import React, { useEffect } from "react"
 import { StyleSheet, View } from "react-native"
+import CatLogo from "@/assets/logo/cat.png"
 import Animated, { FadeInDown } from 'react-native-reanimated'
 
 const SplashScreen = () => {
   const router = useRouter()
-
+  const c = useColors()
   useEffect(() => {
     setTimeout(() => {
       router.replace('/(auth)/welcome')
-    }, 1500)
+    }, 3000)
   })
   return (
-    <View style={styles.container}>
-      <Animated.Text entering={FadeInDown.duration(700).springify()} style={styles.text}>Talkyy</Animated.Text>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
+      <Animated.Image entering={FadeInDown.duration(700).springify()} resizeMode="contain" style={{ width: 200, height: 200 }} source={CatLogo} />
+      <Animated.Text entering={FadeInDown.duration(700).springify()} style={[styles.text, { color: c.text }]}> Katty </Animated.Text>
+
     </View>
   )
 }
@@ -27,10 +30,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     fontStyle: "italic",
-    backgroundColor: colors.neutral900
+    padding: 20,
   },
   text: {
-    color: colors.primary,
     fontSize: 30
   }
 })

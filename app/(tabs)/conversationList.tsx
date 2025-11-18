@@ -7,14 +7,15 @@ import axios from "@/utils/axios";
 import type { ConversationApi, ConversationsListApi, UserInfoApi } from "@/types/types";
 import { useConversationsListStore } from "@/stores/conversationListStore";
 import { useSelectConversationStore } from "@/stores/selectConversationStore";
-import { colors } from "@/constants/theme";
 import { useUserInfoStore } from "@/stores/userInfoStore";
 import { router, Stack } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Options } from "@/components/options";
 import { useSocket } from "@/hooks/useSocket";
+import { useColors } from "@/hooks/useColors";
 
 const ConversationList = () => {
+  const c = useColors()
   const [users, setUsers] = useState<UserInfoApi[] | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -122,9 +123,9 @@ const ConversationList = () => {
         </TouchableOpacity>
       ),
       headerStyle: {
-        backgroundColor: colors.neutral900, // same as StatusBar
+        backgroundColor: c.background, // same as StatusBar
       },
-      headerTintColor: '#fff', // color of title & icons
+      headerTintColor: c.text, // color of title & icons
       headerTitleStyle: {
         fontWeight: 'bold',
       },
@@ -132,7 +133,7 @@ const ConversationList = () => {
 
     <Options isOpen={isOptionsOpen} onClose={closeOptions} />
 
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header */}
       {/* <View style={styles.header}> */}
       {/*   <Text style={styles.username}>{userInfo?.name}</Text> */}
@@ -144,18 +145,18 @@ const ConversationList = () => {
       {/* </View> */}
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
+      <View style={[styles.searchContainer, { backgroundColor: c.background }]}>
         <TextInput
           ref={searchRef}
           value={searchTerm}
           onChangeText={setSearchTerm}
           placeholder="Search"
-          style={styles.searchInput}
+          style={[styles.searchInput, { backgroundColor: c.card, color: c.text }]}
         />
       </View>
 
       {/* Conversation List */}
-      <ScrollView style={styles.listContainer}>
+      <ScrollView style={[styles.listContainer, { backgroundColor: c.background }]}>
         {filteredConversations && (
           <View>
             <Text style={styles.sectionHeader}>Chats</Text>
@@ -198,7 +199,6 @@ export default ConversationList
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral900,
   },
   header: {
     flexDirection: "row",
@@ -207,12 +207,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: colors.neutral600,
   },
   username: {
     fontSize: 20,
     fontWeight: "bold",
-    color: colors.primary,
   },
   optionsIcon: {
     width: 30,
@@ -221,14 +219,11 @@ const styles = StyleSheet.create({
   searchContainer: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    color: "white",
   },
   searchInput: {
-    backgroundColor: colors.neutral400,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    color: colors.primary,
     fontSize: 16,
   },
   listContainer: {
@@ -237,13 +232,11 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     textAlign: "center",
-    color: colors.neutral400,
     marginVertical: 8,
     fontSize: 14,
   },
   noResults: {
     textAlign: "center",
-    color: colors.neutral400,
     marginVertical: 8,
     fontSize: 14,
   },

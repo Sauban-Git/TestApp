@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
 import { colors } from "@/constants/theme"; // optional
+import { useColors } from "@/hooks/useColors";
 
 export type Status = "read" | "delivered" | "sent";
 
@@ -11,16 +12,17 @@ type MessageProps = {
 };
 
 const Message = ({ sender, status, time, content }: MessageProps) => {
+  const c = useColors()
   const containerStyle = sender ? styles.senderContainer : styles.receiverContainer;
-  const messageStyle = sender ? styles.senderMessage : styles.receiverMessage;
+  const messageStyle = sender ? [styles.senderMessage, { backgroundColor: c.senderMessage }] : [styles.receiverMessage, { backgroundColor: c.recieverMessage }];
 
   return (
     <View style={containerStyle}>
       <View style={messageStyle}>
-        <Text style={styles.content}>{content}</Text>
+        <Text style={[styles.content, { color: c.text }]}>{content}</Text>
         <View style={styles.meta}>
-          <Text style={styles.time}>{time}</Text>
-          {sender && status && <Text style={styles.status}> {status}</Text>}
+          <Text style={[styles.time, { color: c.timeText }]}>{time}</Text>
+          {sender && status && <Text style={[styles.status, { color: c.statusText }]}> {status}</Text>}
         </View>
       </View>
     </View>
@@ -41,20 +43,17 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   senderMessage: {
-    backgroundColor: colors.myBubble,
     borderRadius: 20,
     padding: 10,
     maxWidth: "75%",
   },
   receiverMessage: {
-    backgroundColor: colors.primary || "#90caf9",
     borderRadius: 20,
     padding: 10,
     maxWidth: "75%",
   },
   content: {
     fontSize: 16,
-    color: "#000",
   },
   meta: {
     flexDirection: "row",
@@ -63,11 +62,9 @@ const styles = StyleSheet.create({
   },
   time: {
     fontSize: 12,
-    color: "#555",
   },
   status: {
     fontSize: 12,
-    color: "#555",
     marginLeft: 4,
   },
 });

@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { colors } from "@/constants/theme"; // optional, for color consistency
 import { useOnlineUserList } from "@/stores/onlineUsersStore";
 import { useEffect, useState } from "react";
+import { useColors } from "@/hooks/useColors";
 
 type ConversationProps = {
   title: string;
@@ -21,7 +22,7 @@ const Conversation = ({
   participantId,
   imageUrl = "https://via.placeholder.com/50",
 }: ConversationProps) => {
-
+  const c = useColors()
   const onlineUserList = useOnlineUserList((state) => state.onlineUserList)
   const [isOnline, setIsOnline] = useState(false)
 
@@ -33,7 +34,7 @@ const Conversation = ({
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.background }]}
       onPress={onPress}
     >
       <View style={{ position: "relative" }}>
@@ -43,16 +44,16 @@ const Conversation = ({
 
       <View style={styles.textContainer}>
         <View style={styles.header}>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text style={[styles.title, { color: c.text }]} numberOfLines={1}>
             {title}
           </Text>
           {time && (
-            <Text style={styles.time} numberOfLines={1}>
+            <Text style={[styles.time, { color: c.timeText }]} numberOfLines={1}>
               {time}
             </Text>
           )}
         </View>
-        <Text style={styles.lastMessage} numberOfLines={1} ellipsizeMode="tail">
+        <Text style={[styles.lastMessage, { color: c.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
           {lastMessage}
         </Text>
       </View>
@@ -69,14 +70,12 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
     marginVertical: 4,
-    backgroundColor: colors.neutral800,
   },
   image: {
     width: 50,
     height: 50,
     borderRadius: 25,
     borderWidth: 2,
-    borderColor: colors.neutral900,
   },
   textContainer: {
     flex: 1,
@@ -93,7 +92,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#22c55e",
     borderRadius: 7,
     borderWidth: 2,
-    borderColor: colors.neutral800,
   },
   header: {
     flexDirection: "row",
@@ -103,16 +101,13 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: "bold",
     fontSize: 18,
-    color: "#fff",
     flexShrink: 1,
   },
   time: {
     fontSize: 12,
-    color: "#aaa",
     marginLeft: 8,
   },
   lastMessage: {
-    color: "#aaa",
     marginTop: 2,
   },
 });

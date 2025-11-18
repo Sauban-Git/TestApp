@@ -1,18 +1,18 @@
 
-import { colors } from "@/constants/theme";
+import { useColors } from "@/hooks/useColors";
 import { Pressable, Text, StyleSheet } from "react-native";
 
 export default function MyButton({ title, onPress }: { title: string, onPress: () => void }) {
+  const c = useColors();
   return (
-    <Pressable style={styles.button} onPress={onPress}>
-      <Text style={styles.buttonText}>{title}</Text>
+    <Pressable style={[styles.button, { backgroundColor: c.highlight }]} onPress={onPress}>
+      <Text style={[styles.buttonText, { color: c.text }]}>{title}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: colors.primary,
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 10,

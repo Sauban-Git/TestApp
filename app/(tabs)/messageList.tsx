@@ -26,9 +26,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import { colors } from "@/constants/theme"
 import { useOnlineUserList } from "@/stores/onlineUsersStore"
 import { useSocket } from "@/hooks/useSocket"
+import { useColors } from "@/hooks/useColors"
+import MyButton from "@/components/button"
 
 const MessagesList = () => {
 
+  const c = useColors()
   const router = useRouter()
 
   const [content, setContent] = useState("")
@@ -106,16 +109,16 @@ const MessagesList = () => {
     keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}>
     <Stack.Screen options={{
       title: conversation?.name || "Unknown", headerStyle: {
-        backgroundColor: colors.neutral900,
+        backgroundColor: c.background,
       },
-      headerTintColor: '#fff',
+      headerTintColor: c.primary,
       headerTitle: () => (
         <View>
-          <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 18 }}>
+          <Text style={{ color: c.text, fontWeight: "bold", fontSize: 18 }}>
             {conversation?.name || "Unknown"}
           </Text>
           {typeof isOnline !== "undefined" && (
-            <Text style={{ color: isOnline ? "#22c55e" : "#aaa", fontSize: 12 }}>
+            <Text style={{ color: isOnline ? "#22c55e" : c.textSecondary, fontSize: 12 }}>
               {isOnline ? "Online" : "Offline"}
             </Text>
           )}
@@ -125,7 +128,7 @@ const MessagesList = () => {
         fontWeight: 'bold',
       },
     }} />
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
 
       {/* Header */}
       {/* <View style={styles.header}> */}
@@ -162,16 +165,14 @@ const MessagesList = () => {
       </ScrollView>
 
       {/* Input */}
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { backgroundColor: c.background }]}>
         <TextInput
           value={content}
           onChangeText={setContent}
           placeholder="Type here..."
-          style={styles.textInput}
+          style={[styles.textInput, { backgroundColor: c.background }]}
         />
-        <TouchableOpacity style={styles.sendButton} onPress={newMessage}>
-          <Text style={styles.sendButtonText}>Send</Text>
-        </TouchableOpacity>
+        <MyButton onPress={newMessage} title="Send" />
       </View>
 
     </View></KeyboardAvoidingView>
@@ -183,7 +184,6 @@ export default MessagesList
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral900
   },
   header: {
     flexDirection: "row",
@@ -219,13 +219,11 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: "row",
-    backgroundColor: "#ccc",
     padding: 10,
-    marginBottom: 20
+    marginBottom: 20,
   },
   textInput: {
     flex: 1,
-    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderRadius: 12,
@@ -234,12 +232,10 @@ const styles = StyleSheet.create({
   sendButton: {
     padding: 12,
     marginLeft: 10,
-    backgroundColor: "#3399ff",
     borderRadius: 12,
     justifyContent: "center",
   },
   sendButtonText: {
-    color: "#fff",
     fontWeight: "bold"
   }
 })

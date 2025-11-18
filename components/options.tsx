@@ -1,5 +1,6 @@
 
 import { colors } from "@/constants/theme";
+import { useColors } from "@/hooks/useColors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -11,7 +12,7 @@ interface OptionsProps {
 }
 
 export const Options: React.FC<OptionsProps> = ({ isOpen, onClose }) => {
-
+  const c = useColors()
   const router = useRouter()
   const logOut = async () => {
     await AsyncStorage.removeItem("token")
@@ -24,21 +25,21 @@ export const Options: React.FC<OptionsProps> = ({ isOpen, onClose }) => {
   return (
     <View style={styles.overlay}>
       <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
-      <View style={styles.popup}>
+      <View style={[styles.popup, { backgroundColor: c.background }]}>
         <TouchableOpacity style={styles.option} onPress={() => { }}>
-          <Text style={styles.optionText}>New Chat</Text>
+          <Text style={[styles.optionText, { color: c.text }]}>New Chat</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.option} onPress={() => { }}>
-          <Text style={styles.optionText}>Archived</Text>
+          <Text style={[styles.optionText, { color: c.text }]}>Archived</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.option} onPress={() => { }}>
-          <Text style={styles.optionText}>Settings</Text>
+          <Text style={[styles.optionText, { color: c.text }]}>Settings</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.option} onPress={logOut}>
-          <Text style={styles.optionText}>Logout</Text>
+          <Text style={[styles.optionText, { color: c.text }]}>Logout</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </View >
   );
 };
 
@@ -60,11 +61,8 @@ const styles = StyleSheet.create({
     top: 60, // adjust as needed
     right: 16,
     width: 180,
-    backgroundColor: colors.neutral100,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.neutral400,
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -75,7 +73,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   optionText: {
-    color: colors.neutral700,
     fontSize: 16,
   },
 });

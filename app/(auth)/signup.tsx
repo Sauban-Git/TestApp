@@ -1,13 +1,14 @@
 
 import MyButton from "@/components/button";
-import { colors } from "@/constants/theme";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
 import axios from "@/utils/axios" // make sure this works with React Native, may need axios polyfills
+import { useColors } from "@/hooks/useColors";
 
 const Signup = () => {
   const router = useRouter();
+  const c = useColors()
 
   const [formData, setFormData] = useState({
     name: "",
@@ -44,39 +45,39 @@ const Signup = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create Account</Text>
+    <View style={[styles.container, { backgroundColor: c.card }]}>
+      <Text style={[styles.title, { color: c.text }]}>Create Account</Text>
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: c.background }]}
         placeholder="Full Name"
-        placeholderTextColor="#aaa"
+        placeholderTextColor={c.textSecondary}
         value={formData.name}
         onChangeText={(text) => handleChange("name", text)}
       />
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: c.background }]}
         placeholder="Phone"
-        placeholderTextColor="#aaa"
+        placeholderTextColor={c.textSecondary}
         keyboardType="phone-pad"
         value={formData.phone}
         onChangeText={(text) => handleChange("phone", text)}
       />
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: c.background }]}
         placeholder="Password"
-        placeholderTextColor="#aaa"
+        placeholderTextColor={c.textSecondary}
         secureTextEntry
         value={formData.password}
         onChangeText={(text) => handleChange("password", text)}
       />
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, { backgroundColor: c.background }]}
         placeholder="Confirm Password"
-        placeholderTextColor="#aaa"
+        placeholderTextColor={c.textSecondary}
         secureTextEntry
         value={formData.confirmPassword}
         onChangeText={(text) => handleChange("confirmPassword", text)}
@@ -85,12 +86,12 @@ const Signup = () => {
       <MyButton title="Sign Up" onPress={handleSubmit} />
 
       <View style={styles.loginTextContainer}>
-        <Text style={styles.loginText}>Already have an account?</Text>
+        <Text style={{ color: c.textSecondary }}>Already have an account? </Text>
         <Text
-          style={styles.loginLink}
+          style={[styles.loginLink, { color: c.link }]}
           onPress={() => router.replace("/(auth)/login")}
         >
-          {" "}Login
+          Login{" "}
         </Text>
       </View>
     </View>
@@ -104,17 +105,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 20,
-    backgroundColor: colors.neutral900,
   },
   title: {
     fontSize: 28,
-    color: colors.primary,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
   },
   input: {
-    backgroundColor: "#fff",
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
@@ -128,11 +126,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 20,
   },
-  loginText: {
-    color: "#fff",
-  },
   loginLink: {
-    color: colors.primary,
     textDecorationLine: "underline",
   },
 });

@@ -2,14 +2,12 @@ import { getSocket } from "@/singleton/socket"
 import { useConversationsListStore } from "@/stores/conversationListStore"
 import { useMessageListStore } from "@/stores/messageListStore"
 import { useOnlineUserList } from "@/stores/onlineUsersStore"
-import { useSelectConversationStore } from "@/stores/selectConversationStore"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { type Socket } from "socket.io-client"
 
 
 export const useSocket = () => {
-  const conversation = useSelectConversationStore((state) => state.conversation)
   const socketRef = useRef<Socket | null>(null)
   const [connected, setConnected] = useState(false);
   const [typingUser, setTypingUser] = useState<string | null>(null);
@@ -42,13 +40,11 @@ export const useSocket = () => {
 
       socket.on("online", (data) => {
         setOnlineUserList(data.onlineUser || [])
-        console.log("set online true..")
       })
 
       socket.on("message:new", (data) => {
         addMessage(data.message)
         updateLastMessage(data.message, data.conversationId)
-        console.log("new message goingg...")
       })
 
       socket.on("typing:status", (data) => {

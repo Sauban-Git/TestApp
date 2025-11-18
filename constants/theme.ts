@@ -1,27 +1,40 @@
 import { scale, verticalScale } from "@/utils/style"
 
 export const colors = {
-  primary: "#facc15",
-  primaryLight: "#fef08a",
-  primaryDark: "#eab308",
-  text: "#292524",
-  white: "#fff",
-  black: "#000",
-  rose: "#ef4444",
-  otherBubble: "#FFF1BF",
-  myBubble: "#FFE1CC",
-  green: "#16a34a",
-  neutral50: "#fafaf9",
-  neutral100: "#f5f5f4",
-  neutral200: "#e7e5e4",
-  neutral300: "#d6d3d1",
-  neutral350: "#CCCCCC",
-  neutral400: "#a8a29e",
-  neutral500: "#78716c",
-  neutral600: "#57534e",
-  neutral700: "#44403c",
-  neutral800: "#292524",
-  neutral900: "#1c1917",
+  light: {
+    background: "#FFFFFF",
+    card: "#FFF9DB",
+    primary: "#FACC15",
+    primaryDark: "#EAB308",
+    text: "#1A1A1A",
+    textSecondary: "#525252",
+    border: "#E5E7EB",
+    highlight: "#FEF3C7",
+    senderMessage: "#FACC15",
+    recieverMessage: "#F5F5F5",
+    timeText: "rgba(0,0,0,0.45)",
+    statusText: "rgba(0,0,0,0.45)",
+    link: "#2563EB",
+    linkHighlight: "#1E40AF"
+  },
+
+  dark: {
+    background: "#0D0D0D",
+    card: "#1A1A1A",
+    primary: "#FACC15",
+    primaryDark: "#EAB308",
+    text: "#FFFFFF",
+    textSecondary: "#D4D4D4",
+    border: "#2D2D2D",
+    highlight: "#3A3200",
+    senderMessage: "#EAB308",
+    recieverMessage: "#1F1F1F",
+
+    timeText: "rgba(255,255,255,0.45)",
+    statusText: "rgba(255,255,255,0.45)",
+    link: "#60A5FA",
+    linkHighlight: "#3B82F6"
+  },
 };
 
 export const spacingX = {
