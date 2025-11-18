@@ -63,44 +63,11 @@ const MessagesList = () => {
   const { sendMessage } = useSocket()
 
   const newMessage = () => {
+    if (!content) return
     sendMessage(conversation!.id, content)
+    scrollRef.current?.scrollToEnd({ animated: true })
+    setContent("")
   }
-
-  // const sendMessage = async () => {
-  //
-  //   if (!content) return
-  //   const token = await AsyncStorage.getItem("token")
-  //   if (!token) return router.replace('/(auth)/login')
-  //
-  //   try {
-  //     const res = await axios.post<{ message: MessageApi }>("/message/", {
-  //       conversationId: conversation?.id,
-  //       senderId: userInfo?.id,
-  //       content,
-  //     }, {
-  //       headers: {
-  //         Authorization: token
-  //       }
-  //     }
-  //     )
-  //
-  //     const message = res.data.message
-  //     if (!message) return
-  //
-  //     addMessage({
-  //       senderId: message.senderId,
-  //       content: message.content,
-  //       createdAt: message.createdAt,
-  //       conversationId: message.conversationId
-  //     })
-  //
-  //     scrollRef.current?.scrollToEnd({ animated: true })
-  //     setContent("")
-  //
-  //   } catch (error) {
-  //     console.log("Error sending message:", error)
-  //   }
-  // }
 
   useEffect(() => {
     if (participant?.id && onlineUserList) {
