@@ -1,242 +1,202 @@
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
-  Image,
   StyleSheet,
   BackHandler,
   KeyboardAvoidingView,
-  Platform
-} from "react-native"
+  Platform,
+  Keyboard,
+} from "react-native";
 
-
-import axios from "@/utils/axios"
-import { useMessageListStore } from "@/stores/messageListStore"
-import { useUserInfoStore } from "@/stores/userInfoStore"
-import { useSelectConversationStore } from "@/stores/selectConversationStore"
-import { Stack, useRouter } from "expo-router"
-import Message from "@/components/message"
-import { formatToLocalTime } from "@/utils/formatToLocalTime"
-import { MessageListApi, type MessageApi } from "@/types/types"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { colors } from "@/constants/theme"
-import { useOnlineUserList } from "@/stores/onlineUsersStore"
-import { useSocket } from "@/hooks/useSocket"
-import { useColors } from "@/hooks/useColors"
-import MyButton from "@/components/button"
+import axios from "@/utils/axios";
+import { useMessageListStore } from "@/stores/messageListStore";
+import { useUserInfoStore } from "@/stores/userInfoStore";
+import { useSelectConversationStore } from "@/stores/selectConversationStore";
+import { Stack, useRouter } from "expo-router";
+import Message from "@/components/message";
+import { formatToLocalTime } from "@/utils/formatToLocalTime";
+import { MessageListApi } from "@/types/types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useOnlineUserList } from "@/stores/onlineUsersStore";
+import { useSocket } from "@/hooks/useSocket";
+import { useColors } from "@/hooks/useColors";
+import MyButton from "@/components/button";
 
 const MessagesList = () => {
+  const c = useColors();
+  const router = useRouter();
+  const scrollRef = useRef<ScrollView>(null);
 
-  const c = useColors()
-  const router = useRouter()
+  const [content, setContent] = useState("");
+  const [isOnline, setIsOnline] = useState(false);
 
-  const [content, setContent] = useState("")
-  const scrollRef = useRef<ScrollView>(null)
+  const messageList = useMessageListStore((state) => state.messagesList);
+  const setMessageList = useMessageListStore((state) => state.setMessagesList);
+  const userInfo = useUserInfoStore((state) => state.user);
+  const conversation = useSelectConversationStore((state) => state.conversation);
 
-  const messageList = useMessageListStore((state) => state.messagesList)
-  const setMessageList = useMessageListStore((state) => state.setMessagesList)
-  const addMessage = useMessageListStore((state) => state.addMessage)
-  const userInfo = useUserInfoStore((state) => state.user)
-  const conversation = useSelectConversationStore((state) => state.conversation)
+  const participant = conversation?.participants.find(
+    (p) => p.id !== userInfo?.id
+  );
+  const onlineUserList = useOnlineUserList((state) => state.onlineUserList);
 
-  const participant = conversation?.participants.find(p => p.id !== userInfo?.id);
-  const onlineUserList = useOnlineUserList((state) => state.onlineUserList)
-  const [isOnline, setIsOnline] = useState(false)
+  const { sendMessage } = useSocket();
 
+  // Fetch messages
   const fetchMessages = async () => {
-    const token = await AsyncStorage.getItem("token")
-    if (!token) return router.replace('/(auth)/login')
-    if (!conversation?.id) return router.replace('/(tabs)/conversationList')
+    const token = await AsyncStorage.getItem("token");
+    if (!token) return router.replace("/(auth)/login");
+    if (!conversation?.id) return router.replace("/(tabs)/conversationList");
+
     try {
-      const res = await axios.get<{ messages: MessageListApi }>(`/message/${conversation?.id}`, {
-        headers: {
-          Authorization: token
+      const res = await axios.get<{ messages: MessageListApi }>(
+        `/message/${conversation?.id}`,
+        {
+          headers: { Authorization: token },
         }
-      })
-      if (res.data.messages) setMessageList(res.data.messages)
+      );
+      if (res.data.messages) setMessageList(res.data.messages);
     } catch (error) {
-      console.log("Error fetching messages:", error)
+      console.log("Error fetching messages:", error);
     }
-  }
+  };
 
-  const { sendMessage } = useSocket()
-
+  // Send new message
   const newMessage = () => {
-    if (!content) return
-    sendMessage(conversation!.id, content)
-    scrollRef.current?.scrollToEnd({ animated: true })
-    setContent("")
-  }
+    if (!content) return;
+    sendMessage(conversation!.id, content);
+    scrollRef.current?.scrollToEnd({ animated: true });
+    setContent("");
+  };
 
+  // Update online status
   useEffect(() => {
     if (participant?.id && onlineUserList) {
       setIsOnline(onlineUserList.includes(participant.id));
     }
   }, [participant?.id, onlineUserList]);
 
-
+  // Handle back button
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      // If we can navigate back, do it
       if (router.canGoBack()) {
-        router.replace('/(tabs)/conversationList');
-        return true; // prevent default
+        router.replace("/(tabs)/conversationList");
+        return true;
       }
-
-      // Otherwise exit the app
-      router.replace('/(tabs)/conversationList');
+      router.replace("/(tabs)/conversationList");
       return true;
     });
-
     return () => sub.remove();
   }, []);
 
-
-
   useEffect(() => {
-    fetchMessages()
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200)
-  }, [])
+    const showSub = Keyboard.addListener("keyboardDidShow", () => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
 
-  const isSender = (id: string | undefined) => userInfo?.id === id
+    return () => showSub.remove();
+  }, []);
 
-  return (<KeyboardAvoidingView style={{ flex: 1 }}
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-    keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}>
-    <Stack.Screen options={{
-      title: conversation?.name || "Unknown", headerStyle: {
-        backgroundColor: c.background,
-      },
-      headerTintColor: c.primary,
-      headerTitle: () => (
-        <View>
-          <Text style={{ color: c.text, fontWeight: "bold", fontSize: 18 }}>
-            {conversation?.name || "Unknown"}
-          </Text>
-          {typeof isOnline !== "undefined" && (
-            <Text style={{ color: isOnline ? "#22c55e" : c.textSecondary, fontSize: 12 }}>
-              {isOnline ? "Online" : "Offline"}
-            </Text>
-          )}
-        </View>
-      ),
-      headerTitleStyle: {
-        fontWeight: 'bold',
-      },
-    }} />
-    <View style={[styles.container, { backgroundColor: c.background }]}>
+  // Initial fetch and scroll
+  useEffect(() => {
+    fetchMessages();
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200);
+  }, []);
 
-      {/* Header */}
-      {/* <View style={styles.header}> */}
-      {/*   <TouchableOpacity */}
-      {/*     style={styles.headerLeft} */}
-      {/*     onPress={() => router.replace('/(tabs)/conversationList')} */}
-      {/*   > */}
-      {/* <Image source={require("../../assets/back.png")} style={styles.icon} /> */}
-      {/* <Image source={require("@/assets/images/back.png")} style={styles.profileIcon} /> */}
-      {/*   </TouchableOpacity> */}
-      {/**/}
-      {/*   <View style={styles.headerCenter}> */}
-      {/*     <Text style={styles.headerTitle}>{conversationId}</Text> */}
-      {/*   </View> */}
-      {/**/}
-      {/* <Image source={require("../../assets/options.png")} style={styles.icon} /> */}
-      {/* </View> */}
+  const isSender = (id: string | undefined) => userInfo?.id === id;
 
-      {/* Messages */}
-      <ScrollView
-        ref={scrollRef}
-        style={styles.messagesContainer}
-        onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
-      >
-        {messageList && messageList.map((msg, index) => (
-          <Message
-            key={index}
-            sender={isSender(msg.senderId)}
-            status="sent"
-            time={formatToLocalTime(msg.createdAt)}
-            content={msg.content}
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 150 : 80}
+    >
+      <Stack.Screen
+        options={{
+          title: conversation?.name || "Unknown",
+          headerStyle: { backgroundColor: c.background },
+          headerTintColor: c.primary,
+          headerTitle: () => (
+            <View>
+              <Text
+                style={{ color: c.text, fontWeight: "bold", fontSize: 18 }}
+              >
+                {conversation?.name || "Unknown"}
+              </Text>
+              {typeof isOnline !== "undefined" && (
+                <Text
+                  style={{
+                    color: isOnline ? "#22c55e" : c.textSecondary,
+                    fontSize: 12,
+                  }}
+                >
+                  {isOnline ? "Online" : "Offline"}
+                </Text>
+              )}
+            </View>
+          ),
+          headerTitleStyle: { fontWeight: "bold" },
+        }}
+      />
+
+      <View style={[styles.container, { backgroundColor: c.background }]}>
+        {/* Messages */}
+        <ScrollView
+          ref={scrollRef}
+          style={styles.messagesContainer}
+          contentContainerStyle={{ paddingBottom: 10 }}
+          onContentSizeChange={() =>
+            scrollRef.current?.scrollToEnd({ animated: true })
+          }
+        >
+          {messageList?.map((msg, index) => (
+            <Message
+              key={index}
+              sender={isSender(msg.senderId)}
+              status="sent"
+              time={formatToLocalTime(msg.createdAt)}
+              content={msg.content}
+            />
+          ))}
+        </ScrollView>
+
+        {/* Input */}
+        <View style={[styles.inputContainer, { backgroundColor: c.background }]}>
+          <TextInput
+            value={content}
+            onChangeText={setContent}
+            placeholder="Type here..."
+            style={[styles.textInput, { backgroundColor: c.background }]}
           />
-        ))}
-      </ScrollView>
-
-      {/* Input */}
-      <View style={[styles.inputContainer, { backgroundColor: c.background }]}>
-        <TextInput
-          value={content}
-          onChangeText={setContent}
-          placeholder="Type here..."
-          style={[styles.textInput, { backgroundColor: c.background }]}
-        />
-        <MyButton onPress={newMessage} title="Send" />
+          <MyButton onPress={newMessage} title="Send" />
+        </View>
       </View>
+    </KeyboardAvoidingView>
+  );
+};
 
-    </View></KeyboardAvoidingView>
-  )
-}
-
-export default MessagesList
+export default MessagesList;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 10,
-    alignItems: "center"
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center"
-  },
-  icon: {
-    width: 40,
-    height: 40,
-    marginRight: 5
-  },
-  profileIcon: {
-    width: 35,
-    height: 35,
-    borderRadius: 20
-  },
-  headerCenter: {
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "bold"
-  },
-  messagesContainer: {
-    flex: 1,
-    padding: 15,
-  },
+  container: { flex: 1 },
+  messagesContainer: { flex: 1, padding: 15 },
   inputContainer: {
     flexDirection: "row",
     padding: 10,
-    marginBottom: 20,
+    borderTopWidth: 0.5,
+    borderColor: "#ccc",
+    alignItems: "center",
   },
   textInput: {
     flex: 1,
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderRadius: 12,
-    fontSize: 18
+    fontSize: 18,
   },
-  sendButton: {
-    padding: 12,
-    marginLeft: 10,
-    borderRadius: 12,
-    justifyContent: "center",
-  },
-  sendButtonText: {
-    fontWeight: "bold"
-  }
-})
+});
 

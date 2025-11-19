@@ -43,6 +43,7 @@ export const useSocket = () => {
       })
 
       socket.on("message:new", (data) => {
+        console.log(data.message)
         addMessage(data.message)
         updateLastMessage(data.message, data.conversationId)
       })

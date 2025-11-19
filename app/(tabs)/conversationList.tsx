@@ -13,12 +13,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Options } from "@/components/options";
 import { useSocket } from "@/hooks/useSocket";
 import { useColors } from "@/hooks/useColors";
+import MyButton from "@/components/button";
+import { useThemeStore } from "@/stores/themeStore";
 
 const ConversationList = () => {
   const c = useColors()
   const [users, setUsers] = useState<UserInfoApi[] | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const toggleTheme = useThemeStore((state) => state.toggleTheme)
   const setConversationsList = useConversationsListStore((state) => state.setConversationsList);
   const conversationList = useConversationsListStore((state) => state.conversationsList);
   const setSelectConversation = useSelectConversationStore((state) => state.setConversationStore);
@@ -118,9 +120,12 @@ const ConversationList = () => {
 
     <Stack.Screen options={{
       title: userInfo?.name, headerRight: () => (
-        <TouchableOpacity onPress={toggleOptions} style={{ marginRight: 16 }}>
-          <MaterialIcons name="more-vert" size={28} color="#000" />
-        </TouchableOpacity>
+        <>
+          <MyButton onPress={toggleTheme} title="Theme" />
+          <TouchableOpacity onPress={toggleOptions} style={{ marginRight: 16 }}>
+            <MaterialIcons name="more-vert" size={28} color={c.text} />
+          </TouchableOpacity>
+        </>
       ),
       headerStyle: {
         backgroundColor: c.background, // same as StatusBar
@@ -145,13 +150,14 @@ const ConversationList = () => {
       {/* </View> */}
 
       {/* Search Bar */}
-      <View style={[styles.searchContainer, { backgroundColor: c.background }]}>
+      <View style={[styles.searchContainer, { backgroundColor: c.background, borderColor: c.border, borderWidth: 1 }]}>
         <TextInput
           ref={searchRef}
           value={searchTerm}
           onChangeText={setSearchTerm}
           placeholder="Search"
-          style={[styles.searchInput, { backgroundColor: c.card, color: c.text }]}
+          placeholderTextColor={c.textSecondary}
+          style={[styles.searchInput, { backgroundColor: c.background, color: c.text }]}
         />
       </View>
 
@@ -159,7 +165,7 @@ const ConversationList = () => {
       <ScrollView style={[styles.listContainer, { backgroundColor: c.background }]}>
         {filteredConversations && (
           <View>
-            <Text style={styles.sectionHeader}>Chats</Text>
+            <Text style={[styles.sectionHeader, { color: c.textSecondary }]}>Chats</Text>
             {filteredConversations.length > 0 &&
               filteredConversations.map((conv, index) => {
                 const otherParticipant = conv.participants.find(p => p.id !== userInfo?.id);
@@ -179,7 +185,7 @@ const ConversationList = () => {
 
         {users && (
           <View>
-            <Text style={styles.sectionHeader}>Contacts</Text>
+            <Text style={[styles.sectionHeader, { color: c.textSecondary }]}>Contacts</Text>
             {users.length > 0 ? (
               users.map((user, index) => (
                 <Conversation key={index} title={user.name || ""} lastMessage="Click to start conversation" onPress={() => newConversation(user.id, user.name)} />

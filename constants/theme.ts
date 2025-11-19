@@ -10,7 +10,7 @@ export const colors = {
     textSecondary: "#525252",
     border: "#E5E7EB",
     highlight: "#FEF3C7",
-    senderMessage: "#FACC15",
+    senderMessage: "#FDE68A",
     recieverMessage: "#F5F5F5",
     timeText: "rgba(0,0,0,0.45)",
     statusText: "rgba(0,0,0,0.45)",
@@ -27,7 +27,7 @@ export const colors = {
     textSecondary: "#D4D4D4",
     border: "#2D2D2D",
     highlight: "#3A3200",
-    senderMessage: "#EAB308",
+    senderMessage: "#8B6F00",
     recieverMessage: "#1F1F1F",
 
     timeText: "rgba(255,255,255,0.45)",
