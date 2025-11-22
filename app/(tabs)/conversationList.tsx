@@ -66,7 +66,7 @@ const ConversationList = () => {
 
   const openMessage = (conversation: ConversationApi) => {
     setSelectConversation(conversation);
-    router.replace('/(tabs)/messageList')
+    router.push('/(tabs)/messageList')
   };
 
   const newConversation = async (id: string, name: string) => {
@@ -87,7 +87,7 @@ const ConversationList = () => {
       if (res.data.conversation) {
         console.log("New conversation with id: ", res.data.conversation.id)
         setSelectConversation(res.data.conversation)
-        router.replace('/(tabs)/messageList')
+        router.push('/(tabs)/messageList')
       }
     } catch (error) {
       console.log("Error while creating conversation:", error);

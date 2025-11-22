@@ -101,22 +101,6 @@ const MessagesList = () => {
     }
   }, [participant?.id, onlineUserList]);
 
-  const setConversation = useSelectConversationStore((state) => state.setConversationStore)
-  // Handle back button
-  useEffect(() => {
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (router.canGoBack()) {
-        router.replace("/(tabs)/conversationList");
-        setConversation(null)
-        return true;
-      }
-      router.replace("/(tabs)/conversationList");
-      setConversation(null)
-      return true;
-    });
-    return () => sub.remove();
-  }, []);
-
   useEffect(() => {
     const showSub = Keyboard.addListener("keyboardDidShow", () => {
       scrollRef.current?.scrollToEnd({ animated: true });
@@ -129,6 +113,10 @@ const MessagesList = () => {
   useEffect(() => {
     fetchMessages();
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200);
+
+    return () => {
+      setMessageList(null)
+    }
   }, []);
 
   const isSender = (id: string | undefined) => userInfo?.id === id;
