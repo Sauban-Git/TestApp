@@ -2,6 +2,7 @@ import { getSocket } from "@/singleton/socket"
 import { useConversationsListStore } from "@/stores/conversationListStore"
 import { useMessageListStore } from "@/stores/messageListStore"
 import { useOnlineUserList } from "@/stores/onlineUsersStore"
+import { useTypingStore } from "@/stores/typingStore"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { type Socket } from "socket.io-client"
@@ -10,7 +11,6 @@ import { type Socket } from "socket.io-client"
 export const useSocket = () => {
   const socketRef = useRef<Socket | null>(null)
   const [connected, setConnected] = useState(false);
-  const [typingUser, setTypingUser] = useState<string | null>(null);
   const setOnlineUserList = useOnlineUserList((state) => state.setOnlineUserList)
   const addMessage = useMessageListStore((state) => state.addMessage)
   const updateLastMessage = useConversationsListStore((state) => state.updateLastMessage)
@@ -49,8 +49,13 @@ export const useSocket = () => {
       })
 
       socket.on("typing:status", (data) => {
-        setTypingUser(data.typing === "start" ? data.userId : null)
-      })
+        if (data.typing === "start") {
+          useTypingStore.getState().addTypingUser(data.userId);
+        } else if (data.typing === "stop") {
+          useTypingStore.getState().removeTypingUser(data.userId);
+        }
+      });
+
 
     }
 
@@ -87,7 +92,6 @@ export const useSocket = () => {
 
   return {
     connected,
-    typingUser,
     sendMessage,
     setTyping,
   };

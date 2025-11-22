@@ -25,6 +25,8 @@ import { useOnlineUserList } from "@/stores/onlineUsersStore";
 import { useSocket } from "@/hooks/useSocket";
 import { useColors } from "@/hooks/useColors";
 import MyButton from "@/components/button";
+import { useTypingStore } from "@/stores/typingStore";
+import TypingIndicator from "@/components/typingIndicator";
 
 const MessagesList = () => {
   const c = useColors();
@@ -44,7 +46,26 @@ const MessagesList = () => {
   );
   const onlineUserList = useOnlineUserList((state) => state.onlineUserList);
 
-  const { sendMessage } = useSocket();
+  const { sendMessage, setTyping } = useSocket();
+  const typingUsers = useTypingStore((state) => state.typingUsers)
+
+  const typingUsersExceptMe = Array.from(typingUsers).filter(
+    (id) => id !== userInfo?.id
+  );
+
+  const handleFocus = () => {
+    if (conversation?.id) {
+      setTyping(conversation.id, "start");
+    }
+  };
+
+  const handleBlurOrSend = () => {
+    if (conversation?.id) {
+      setTyping(conversation.id, "stop");
+    }
+  };
+
+  const isSomeoneTyping = typingUsersExceptMe.length > 0;
 
   // Fetch messages
   const fetchMessages = async () => {
@@ -165,11 +186,19 @@ const MessagesList = () => {
               content={msg.content}
             />
           ))}
+
+          <TypingIndicator
+            isSomeoneTyping={isSomeoneTyping}
+            usersTyping={typingUsersExceptMe}
+          />
+
         </ScrollView>
 
         {/* Input */}
         <View style={[styles.inputContainer, { backgroundColor: c.background }]}>
           <TextInput
+            onFocus={handleFocus}
+            onBlur={handleBlurOrSend}
             value={content}
             onChangeText={setContent}
             placeholder="Type here..."
