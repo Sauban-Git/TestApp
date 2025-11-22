@@ -1,6 +1,5 @@
 
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
-import { colors } from "@/constants/theme"; // optional, for color consistency
 import { useOnlineUserList } from "@/stores/onlineUsersStore";
 import { useEffect, useState } from "react";
 import { useColors } from "@/hooks/useColors";

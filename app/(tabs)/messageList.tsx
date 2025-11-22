@@ -80,14 +80,17 @@ const MessagesList = () => {
     }
   }, [participant?.id, onlineUserList]);
 
+  const setConversation = useSelectConversationStore((state) => state.setConversationStore)
   // Handle back button
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
       if (router.canGoBack()) {
         router.replace("/(tabs)/conversationList");
+        setConversation(null)
         return true;
       }
       router.replace("/(tabs)/conversationList");
+      setConversation(null)
       return true;
     });
     return () => sub.remove();

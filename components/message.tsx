@@ -1,5 +1,4 @@
 import { View, Text, StyleSheet } from "react-native";
-import { colors } from "@/constants/theme"; // optional
 import { useColors } from "@/hooks/useColors";
 
 export type Status = "read" | "delivered" | "sent";

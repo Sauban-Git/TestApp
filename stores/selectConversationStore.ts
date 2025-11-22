@@ -3,12 +3,12 @@ import { create } from "zustand"
 
 interface SelectConversationStore {
   conversation: ConversationApi | null
-  setConversationStore: (conversation: ConversationApi) => void
+  setConversationStore: (conversation: ConversationApi | null) => void
 }
 
 export const useSelectConversationStore = create<SelectConversationStore>((set) => ({
   conversation: null,
-  setConversationStore: (conversation: ConversationApi) => set({
+  setConversationStore: (conversation: ConversationApi | null) => set({
     conversation
   })
 }))

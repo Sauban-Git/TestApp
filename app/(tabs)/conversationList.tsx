@@ -15,6 +15,7 @@ import { useSocket } from "@/hooks/useSocket";
 import { useColors } from "@/hooks/useColors";
 import MyButton from "@/components/button";
 import { useThemeStore } from "@/stores/themeStore";
+import { formatToLocalTime } from "@/utils/formatToLocalTime";
 
 const ConversationList = () => {
   const c = useColors()
@@ -178,11 +179,12 @@ const ConversationList = () => {
                   key={index}
                   title={conv.name || ""}
                   lastMessage={conv.messages[0]?.content ?? "Click to start conversation"}
+                  time={conv.messages[0]?.createdAt ? formatToLocalTime(conv.messages[0]?.createdAt) : ""}
                 />
               })}
           </View>
         )}
-
+        {/* Users List */}
         {users && (
           <View>
             <Text style={[styles.sectionHeader, { color: c.textSecondary }]}>Contacts</Text>
