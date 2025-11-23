@@ -1,98 +1,63 @@
-import { getSocket } from "@/singleton/socket"
-import { useConversationsListStore } from "@/stores/conversationListStore"
-import { useMessageListStore } from "@/stores/messageListStore"
-import { useOnlineUserList } from "@/stores/onlineUsersStore"
-import { useTypingStore } from "@/stores/typingStore"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { useCallback, useEffect, useRef, useState } from "react"
-import { type Socket } from "socket.io-client"
 
+import { useEffect, useRef, useState, useCallback } from "react";
+import { getSocket } from "@/singleton/socket";
+import type { Socket } from "socket.io-client";
 
 export const useSocket = () => {
-  const socketRef = useRef<Socket | null>(null)
+  const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);
-  const setOnlineUserList = useOnlineUserList((state) => state.setOnlineUserList)
-  const addMessage = useMessageListStore((state) => state.addMessage)
-  const updateLastMessage = useConversationsListStore((state) => state.updateLastMessage)
+
   useEffect(() => {
+    let isMounted = true;
 
-    const initSocket = async () => {
-      const token = await AsyncStorage.getItem("token")
-      if (!token) return console.log("wrong token")
-      console.log("Socket connecting.....")
-      const socket = getSocket(token)
+    const init = async () => {
+      try {
+        const socket = await getSocket();
+        socketRef.current = socket;
 
-      socketRef.current = socket
+        if (!isMounted) return;
 
-      socket.on("connect", () => {
-        setConnected(true)
-        console.log("Socket connected")
-      })
+        socket.on("connect", () => {
+          setConnected(true);
+        });
 
-      socket.on("disconnect", () => {
-        setConnected(false)
-        console.log("Socket disconnected")
-      })
+        socket.on("disconnect", () => {
+          setConnected(false);
+        });
 
-      socket.on("connect_error", (err) => {
-        console.log("Socket connect error:", err.message);
-      });
-
-      socket.on("online", (data) => {
-        setOnlineUserList(data.onlineUser || [])
-      })
-
-      socket.on("message:new", (data) => {
-        console.log(data.message)
-        addMessage(data.message)
-        updateLastMessage(data.message, data.conversationId)
-      })
-
-      socket.on("typing:status", (data) => {
-        if (data.typing === "start") {
-          useTypingStore.getState().addTypingUser(data.userId);
-        } else if (data.typing === "stop") {
-          useTypingStore.getState().removeTypingUser(data.userId);
-        }
-      });
-
-
-    }
-
-    initSocket()
-
-    return () => {
-      const socket = socketRef.current
-      if (socket) {
-
-        socket.off("connect");
-        socket.off("disconnect");
-        socket.off("connect_error");
-        socket.off("online");
-        socket.off("message:new");
-        socket.off("typing:status");
+        socket.on("connect_error", (err) => {
+          console.log("Socket connect error:", err.message);
+        });
+      } catch (err) {
+        console.log("Socket init failed:", err);
       }
     };
 
-  }, [])
+    init();
 
-  const sendMessage = useCallback(
-    (conversationId: string, message: string) => {
-      socketRef.current?.emit("message:new", { conversationId, message });
-    },
-    []
-  );
+    return () => {
+      isMounted = false;
+      const socket = socketRef.current;
+      if (socket) {
+        socket.off("connect");
+        socket.off("disconnect");
+        socket.off("connect_error");
+      }
+    };
+  }, []);
 
-  const setTyping = useCallback(
-    (conversationId: string, status: "start" | "stop") => {
-      socketRef.current?.emit("typing:status", { conversationId, typing: status });
-    },
-    []
-  );
+  const sendMessage = useCallback((conversationId: string, message: string) => {
+    socketRef.current?.emit("message:new", { conversationId, message });
+  }, []);
 
-  return {
-    connected,
-    sendMessage,
-    setTyping,
-  };
-}
+  const readMessage = useCallback((conversationId: string) => {
+    socketRef.current?.emit("message:read", { conversationId });
+  }, []);
+
+  const setTyping = useCallback((conversationId: string, status: "start" | "stop") => {
+    socketRef.current?.emit("typing:status", { conversationId, typing: status });
+  }, []);
+
+  return { connected, sendMessage, readMessage, setTyping };
+};
+

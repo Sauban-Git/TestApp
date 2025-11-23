@@ -46,7 +46,7 @@ const MessagesList = () => {
   );
   const onlineUserList = useOnlineUserList((state) => state.onlineUserList);
 
-  const { sendMessage, setTyping } = useSocket();
+  const { connected, sendMessage, setTyping, readMessage } = useSocket();
   const typingUsers = useTypingStore((state) => state.typingUsers)
 
   const typingUsersExceptMe = Array.from(typingUsers).filter(
@@ -118,6 +118,13 @@ const MessagesList = () => {
       setMessageList(null)
     }
   }, []);
+
+  useEffect(() => {
+    if (conversation?.id && connected) {
+      console.log("reading message...")
+      readMessage(conversation.id);
+    }
+  }, [conversation?.id, connected]);
 
   const isSender = (id: string | undefined) => userInfo?.id === id;
 

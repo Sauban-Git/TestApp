@@ -7,6 +7,7 @@ import { useEffect } from "react"
 import { View, Text, StyleSheet, Image } from "react-native"
 import CatLogo from "@/assets/logo/cat.png"
 import Animated, { FadeInDown } from "react-native-reanimated"
+import { useSocket } from "@/hooks/useSocket"
 
 const Welcome = () => {
   const c = useColors()
@@ -20,6 +21,7 @@ const Welcome = () => {
     }
 
   }
+  const { connected } = useSocket() // pass empty string if not loaded yet
 
   useEffect(() => {
     checkUser()

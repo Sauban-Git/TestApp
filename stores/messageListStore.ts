@@ -5,6 +5,8 @@ interface MessageListStore {
   messagesList: MessageListApi | null
   setMessagesList: (value: MessageListApi | null) => void
   addMessage: (value: MessageApi) => void
+  markMessagesAsRead: (readAtTime: any) => void
+  markMessagesAsDelivered: (deliveredAt: any) => void
 }
 
 export const useMessageListStore = create<MessageListStore>((set) => ({
@@ -14,5 +16,31 @@ export const useMessageListStore = create<MessageListStore>((set) => ({
   }),
   addMessage: (value: MessageApi) => set((state) => ({
     messagesList: state.messagesList ? [...state.messagesList, value] : [value]
-  }))
+  })),
+
+  markMessagesAsRead: (readAtTime: any) =>
+    set((state) => ({
+      messagesList: state.messagesList
+        ? state.messagesList.map((msg) => {
+          if (!msg.readAt) {
+            return { ...msg, readAt: readAtTime };
+          }
+          return msg;
+        })
+        : null,
+    })),
+
+  markMessagesAsDelivered: (deliveredAt: any) =>
+    set((state) => ({
+      messagesList: state.messagesList
+        ? state.messagesList.map((msg) => {
+          if (!msg.recievedAt) {
+            return { ...msg, recievedAt: deliveredAt }
+          }
+          return msg;
+        })
+        : null
+    }))
+
+
 }))
