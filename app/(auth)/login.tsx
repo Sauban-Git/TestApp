@@ -45,6 +45,7 @@ const Login = () => {
       router.replace("/(tabs)/conversationList"); // Navigate to main app screen
 
     } catch (error: any) {
+      console.log("Error: ", error)
       Alert.alert("Login Failed", error.response?.data?.message || error.message);
     }
   };
